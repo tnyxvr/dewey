@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dewey — Media Organiser for Mac</title>
+  <meta name="description" content="Dewey automatically organises your photos, RAW files and videos the moment you plug in a drive. Built for photographers and videographers on macOS.">
+  <meta property="og:title" content="Dewey — Media Organiser for Mac">
+  <meta property="og:description" content="Plug in. Confirm. Done. Dewey organises your media so you don't have to.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0c0c0c;
+      --bg2: #111111;
+      --bg3: #181818;
+      --border: rgba(255,255,255,0.07);
+      --text: #f0ede8;
+      --muted: #888880;
+      --accent: #4e8df5;
+      --serif: 'DM Serif Display', Georgia, serif;
+      --sans: 'DM Sans', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-weight: 300;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.025;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 20px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(12,12,12,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: var(--serif);
+      font-size: 1.35rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .nav-logo span {
+      display: inline-block;
+      width: 7px; height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-left: 3px;
+      vertical-align: middle;
+      margin-bottom: 3px;
+    }
+
+    .nav-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--text);
+      color: var(--bg);
+      padding: 8px 20px;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .nav-download:hover { opacity: 0.85; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px; height: 700px;
+      background: radial-gradient(ellipse, rgba(78,141,245,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(3.2rem, 8vw, 6.5rem);
+      line-height: 1.0;
+      letter-spacing: -0.03em;
+      margin-bottom: 28px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .hero h1 em { font-style: italic; color: var(--muted); }
+
+    .hero-sub {
+      max-width: 520px;
+      font-size: 1.05rem;
+      color: var(--muted);
+      line-height: 1.75;
+      margin-bottom: 48px;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--text);
+      color: var(--bg);
+      padding: 14px 32px;
+      border-radius: 100px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary svg { width: 18px; height: 18px; }
+
+    .hero-meta { font-size: 0.78rem; color: var(--muted); margin-top: 20px; }
+
+    /* SHARED SECTION */
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+
+    .section-body {
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 1.75;
+      max-width: 520px;
+    }
+
+    /* BEFORE / AFTER */
+    .before-after {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 100px 24px;
+    }
+
+    .before-after-inner { max-width: 1100px; margin: 0 auto; }
+
+    .ba-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 24px;
+      align-items: center;
+      margin-top: 56px;
+    }
+
+    .ba-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .ba-card-label {
+      padding: 12px 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .ba-card.after .ba-card-label { color: var(--accent); }
+
+    .folder-tree {
+      padding: 24px 20px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.78rem;
+      line-height: 1.9;
+    }
+
+    .folder-tree .file { color: #555; }
+    .folder-tree .folder-after { color: var(--accent); }
+    .folder-tree .file-after { color: #666; }
+
+    .ba-arrow { font-size: 1.5rem; color: var(--muted); text-align: center; }
+
+    /* SCREENSHOTS */
+    .screenshots { padding: 100px 24px; max-width: 1100px; margin: 0 auto; }
+
+    .step-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 56px;
+    }
+
+    .step-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .step-card:hover { border-color: rgba(78,141,245,0.3); }
+
+    .step-card-img {
+      width: 100%;
+      aspect-ratio: 16/10;
+      background: var(--bg3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .step-card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+
+    .step-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .step-placeholder svg { width: 36px; height: 36px; opacity: 0.25; }
+
+    .step-card-body { padding: 28px; }
+
+    .step-number {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .step-card-body h3 {
+      font-family: var(--serif);
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+    }
+
+    .step-card-body p { font-size: 0.9rem; color: var(--muted); line-height: 1.65; }
+
+    /* FEATURES */
+    .features {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 100px 24px;
+    }
+
+    .features-inner { max-width: 1100px; margin: 0 auto; }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-top: 56px;
+    }
+
+    .feature {
+      background: var(--bg2);
+      padding: 36px 32px;
+      transition: background 0.2s;
+    }
+    .feature:hover { background: var(--bg3); }
+
+    .feature-icon {
+      width: 40px; height: 40px;
+      background: rgba(78,141,245,0.1);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .feature-icon svg { width: 20px; height: 20px; stroke: var(--accent); }
+
+    .feature h4 { font-weight: 500; font-size: 0.95rem; margin-bottom: 8px; }
+    .feature p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+    /* CTA */
+    .cta { padding: 120px 24px; text-align: center; }
+
+    .cta h2 {
+      font-family: var(--serif);
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin-bottom: 24px;
+    }
+    .cta h2 em { font-style: italic; color: var(--muted); }
+
+    .cta p {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: 48px;
+      max-width: 380px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.7;
+    }
+
+    .system-req { margin-top: 20px; font-size: 0.78rem; color: var(--muted); }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      nav { padding: 16px 24px; }
+      .ba-grid { grid-template-columns: 1fr; }
+      .ba-arrow { transform: rotate(90deg); }
+      .step-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 12px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#" class="nav-logo">Dewey<span></span></a>
+    <a href="https://github.com/tnyxvr/dewey/releases/latest/download/Dewey.dmg" class="nav-download">
+      ↓ Download for Mac
+    </a>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">macOS 13 Ventura or later</div>
+    <h1>Your media,<br><em>finally</em> organised.</h1>
+    <p class="hero-sub">
+      At the end of a trip or long shoot, organising files into folders has
+      never been a fun task — some of us even dread it, and the card ends up
+      collecting years of photos. Dewey is here to give you a hand.
+    </p>
+    <div class="hero-actions">
+      <a href="https://github.com/tnyxvr/dewey/releases/latest/download/Dewey.dmg" class="btn-primary">
+        <svg viewBox="0 0 20 20" fill="currentColor">
+          <path d="M10 2a1 1 0 011 1v9.586l2.293-2.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V3a1 1 0 011-1z"/>
+          <path d="M3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
+        </svg>
+        Download Dewey — Free
+      </a>
+    </div>
+    <p class="hero-meta">Free &nbsp;·&nbsp; macOS 13+ &nbsp;·&nbsp; No account needed</p>
+  </div>
+
+  <!-- BEFORE / AFTER -->
+  <div class="before-after">
+    <div class="before-after-inner">
+      <p class="section-label reveal">Before &amp; After</p>
+      <h2 class="section-title reveal reveal-delay-1">From chaos<br>to <em>clarity</em>.</h2>
+      <p class="section-body reveal reveal-delay-2">Dewey reads EXIF metadata from every file and builds the folder structure automatically — by day, week, or month depending on how much you shot.</p>
+
+      <div class="ba-grid reveal reveal-delay-3">
+        <div class="ba-card">
+          <div class="ba-card-label">📁 Before</div>
+          <div class="folder-tree">
+            <div class="file">IMG_3490.CR3</div>
+            <div class="file">IMG_3491.CR3</div>
+            <div class="file">MVI_3492.MOV</div>
+            <div class="file">IMG_3493.CR3</div>
+            <div class="file">IMG_3494.CR3</div>
+            <div class="file">MVI_3495.MOV</div>
+            <div class="file">IMG_3496.CR3</div>
+            <div class="file">IMG_3497.CR3</div>
+            <div class="file">MVI_3499.MOV</div>
+            <div class="file">IMG_3500.CR3</div>
+          </div>
+        </div>
+
+        <div class="ba-arrow">→</div>
+
+        <div class="ba-card after">
+          <div class="ba-card-label">✦ After</div>
+          <div class="folder-tree">
+            <div class="folder-after">📁 2026 /</div>
+            <div class="folder-after">&nbsp;&nbsp;📁 2026-03-14 /</div>
+            <div class="file-after">&nbsp;&nbsp;&nbsp;&nbsp;IMG_3490.CR3</div>
+            <div class="file-after">&nbsp;&nbsp;&nbsp;&nbsp;IMG_3491.CR3</div>
+            <div class="file-after">&nbsp;&nbsp;&nbsp;&nbsp;MVI_3492.MOV</div>
+            <div class="folder-after">&nbsp;&nbsp;📁 2026-03-18 /</div>
+            <div class="file-after">&nbsp;&nbsp;&nbsp;&nbsp;IMG_3496.CR3</div>
+            <div class="file-after">&nbsp;&nbsp;&nbsp;&nbsp;IMG_3497.CR3</div>
+            <div class="folder-after">&nbsp;&nbsp;📁 2026-W12 /</div>
+            <div class="file-after">&nbsp;&nbsp;&nbsp;&nbsp;MVI_3499.MOV</div>
+            <div class="file-after">&nbsp;&nbsp;&nbsp;&nbsp;IMG_3500.CR3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="screenshots">
+    <p class="section-label reveal">How it works</p>
+    <h2 class="section-title reveal reveal-delay-1">Two steps.<br>Then you're <em>done</em>.</h2>
+
+    <div class="step-grid">
+      <div class="step-card reveal reveal-delay-1">
+        <div class="step-card-img">
+          <img src="screenshots/onboarding.png" alt="Dewey onboarding screen"
+               onerror="this.style.display='none'; this.parentElement.querySelector('.step-placeholder').style.display='flex';">
+          <div class="step-placeholder" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="3"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+            screenshots/onboarding.png
+          </div>
+        </div>
+        <div class="step-card-body">
+          <p class="step-number">Step 01</p>
+          <h3>Set your destinations once</h3>
+          <p>Tell Dewey where photos and videos should go. Got a Lightroom or Final Cut project folder? Set it as the default. You can always override it per session.</p>
+        </div>
+      </div>
+
+      <div class="step-card reveal reveal-delay-2">
+        <div class="step-card-img">
+          <img src="screenshots/organise.png" alt="Dewey organise window"
+               onerror="this.style.display='none'; this.parentElement.querySelector('.step-placeholder').style.display='flex';">
+          <div class="step-placeholder" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="3"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+            screenshots/organise.png
+          </div>
+        </div>
+        <div class="step-card-body">
+          <p class="step-number">Step 02</p>
+          <h3>Plug in and confirm</h3>
+          <p>Dewey sits quietly in your menu bar. When a drive is detected it taps you on the shoulder. Choose what to copy, how to handle duplicates, and hit Start.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="features">
+    <div class="features-inner">
+      <p class="section-label reveal">What's included</p>
+      <h2 class="section-title reveal reveal-delay-1">Built for how<br>photographers <em>actually</em> work.</h2>
+
+      <div class="features-grid reveal reveal-delay-2">
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <h4>Lives in the menu bar</h4>
+          <p>Dewey stays out of your way until it's needed. No dock icon, no windows cluttering your workspace.</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <h4>RAW + video aware</h4>
+          <p>Supports CR3, CR2, NEF, ARW, RAF, DNG and more. Videos and photos route to separate destinations automatically.</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </div>
+          <h4>Smart date grouping</h4>
+          <p>Too few shots for a full day folder? Dewey automatically groups by week or month so nothing gets buried.</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <h4>Multi-card shoots</h4>
+          <p>Shooting with a partner? Enable batch mode and each source gets its own subfolder inside the shared date folder.</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h4>Duplicate protection</h4>
+          <p>Skip, replace, or keep both — you decide what happens when a file already exists at the destination.</p>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <h4>Date range filter</h4>
+          <p>Only want files from a specific shoot? Set a start and end date and Dewey ignores everything outside that window.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <h2 class="reveal">Ready to stop<br>dreading the <em>card dump?</em></h2>
+    <p class="reveal reveal-delay-1">Free to download. No subscription. No account. Just plug in and go.</p>
+    <div class="reveal reveal-delay-2">
+      <a href="https://github.com/tnyxvr/dewey/releases/latest/download/Dewey.dmg" class="btn-primary">
+        <svg viewBox="0 0 20 20" fill="currentColor" style="width:18px;height:18px;">
+          <path d="M10 2a1 1 0 011 1v9.586l2.293-2.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V3a1 1 0 011-1z"/>
+          <path d="M3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
+        </svg>
+        Download Dewey — Free
+      </a>
+      <p class="system-req">Requires macOS 13 Ventura or later <br> &nbsp;·&nbsp; Apple Silicon &amp; Intel</p>
+    </div>
+  </div>
+
+  <footer>
+    <span>© 2026 Dewey</span>
+    <span>be a goldfish</span>
+    <a href="https://github.com/tnyxvr/dewey">GitHub →</a>
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
